@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Wordlist" ADD COLUMN     "copied" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "upvoted" JSONB NOT NULL DEFAULT E'[]';

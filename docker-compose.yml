@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  app:
+    build:
+      context: .
+    env_file:
+      - .env
+    volumes:
+      - .:/intern-big-data-backend
+    ports:
+      - 9000:9000
+    image: app:express
+    container_name: node_container
+    command: npm start

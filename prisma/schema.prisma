@@ -1,0 +1,70 @@
+// npx prisma migrate dev --name init
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl"]
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  username  String     @unique
+  hash      String     @unique
+  salt      String     @unique
+  name      String     @default("NA")
+  avatar    String     @default("none")
+  wordlists Wordlist[] @relation("Wordlists")
+  folders   Folder[]
+}
+
+model Wordlist {
+  id        Int             @id @default(autoincrement())
+  title     String
+  langs     String
+  reference String
+  userId    Int
+  user      User            @relation("Wordlists", fields: [userId], references: [id])
+  private   Boolean         @default(false)
+  words     Wordlist_item[]
+  upvoted   Json            @default("[]")
+  copied    Int             @default(0)
+  length    Int             @default(0)
+  created   DateTime        @default(now())
+  folderId  Int?
+  folder    Folder?         @relation(fields: [folderId], references: [id])
+}
+
+model Wordlist_item {
+  id           Int           @id @default(autoincrement())
+  word         String
+  translation  String
+  langs        String        @default("latin-english")
+  wordlistId   Int
+  wordlist     Wordlist      @relation(fields: [wordlistId], references: [id])
+  test_answers Test_answer[] @relation("Results")
+}
+
+model Test_answer {
+  id                 Int           @id @default(autoincrement())
+  answer             String
+  correct_answer     String
+  correct            Boolean
+  correct_percentage Int
+  wordlistItemId     Int
+  wordlist_item      Wordlist_item @relation("Results", fields: [wordlistItemId], references: [id])
+}
+
+model Folder {
+  id        Int        @id @default(autoincrement())
+  name      String
+  upvoted   Json       @default("[]")
+  copied    Int        @default(0)
+  length    Int
+  wordlists Wordlist[]
+  userId    Int
+  user      User       @relation(fields: [userId], references: [id])
+}

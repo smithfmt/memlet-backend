@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+    postgres:
+        image:
+            postgres 
+        volumes:
+            - /data/postgres:/var/lib/postgresql/data
+        ports:
+            - 5000:5432 
+        environment:
+            POSTGRES_USER: freddie
+            POSTGRES_PASSWORD: Gunn3r123
+            POSTGRES_DB: DB1
+
+    ibd-frontend:
+        image: sentiumconsulting/ibd-frontend:latest
+        ports:
+            - 9000:9000 
+            
+    ibd-backend:
+        image: sentiumconsulting/ibd-backend:latest
+        environment: 
+            DATABASE_URL: postgresql://freddie:Gunn3r123@192.168.11.49:5000/DB1
