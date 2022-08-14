@@ -8,7 +8,7 @@
     "dev": "nodemon ./bin/www"
   },
   "dependencies": {
-    "@prisma/client": "^2.28.0",
+    "@prisma/client": "^2.30.3",
     "axios": "^0.21.1",
     "base64url": "^3.0.1",
     "cookie-parser": "~1.4.4",
@@ -29,7 +29,7 @@
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "path": "^0.12.7",
-    "prisma": "^2.25.0",
+    "prisma": "^2.30.3",
     "validator": "^13.6.0",
     "vercel": "^28.0.1"
   },
