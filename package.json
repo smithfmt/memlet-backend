@@ -38,7 +38,7 @@
     "validator": "^13.6.0",
     "vercel": "^28.0.1"
   },
-  "main": "app.js",
+  "main": "app.ts",
   "repository": "https://freddiesmith@bitbucket.org/sentium-consulting/intern-big-data-backend.git",
   "author": "freddiesmith <freddie.smith@sentium-consulting.com>",
   "license": "MIT",
