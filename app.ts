@@ -14,14 +14,26 @@ const app = express();
 passportConfig(passport);
 app.use(passport.initialize());
 app.use(passport.session());
+const corsOpts = {
+  origin: '*',
 
-app.use(cors());
+  methods: [
+    'GET',
+    'POST',
+    'PUT',
+    'DELETE'
+  ],
+
+  allowedHeaders: [
+    'Content-Type',
+  ],
+};
+app.use(cors(corsOpts));
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.options('*', cors({origin: 'http://memlet-frontend.vercel.app',optionsSuccessStatus: 200}));
 app.use("/", userAPIRouter);
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
