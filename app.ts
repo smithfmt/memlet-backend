@@ -14,21 +14,7 @@ const app = express();
 passportConfig(passport);
 app.use(passport.initialize());
 app.use(passport.session());
-const corsOpts = {
-  origin: '*',
-
-  methods: [
-    'GET',
-    'POST',
-    'PUT',
-    'DELETE'
-  ],
-
-  allowedHeaders: [
-    'Content-Type',
-  ],
-};
-app.use(cors(corsOpts));
+app.use(cors({origin:"https://memlet-frontend.vercel.app"}));
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
