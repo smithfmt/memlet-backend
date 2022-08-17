@@ -16,6 +16,11 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 
+const setCors = (req,res,next) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  next()
+};
+
 // Api is Working //
 
 router.get("/", (req, res, next) => {
@@ -37,7 +42,7 @@ router.post("/login",
 );
 
 router.get("/dashboard",
-  cors(corsOptions),
+  setCors,
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
