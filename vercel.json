@@ -1,6 +1,6 @@
 {
     "name": "nodejs-express",
     "builds": [
-        { "src": "index.ts", "use": "@vercel/node" }
+        { "src": "userAPI.ts", "use": "@vercel/node" }
     ]
 }
