@@ -1,7 +1,7 @@
 {
     "name": "nodejs-express",
     "builds": [
-        { "src": "index.js", "use": "@now/node" }
+        { "src": "index.ts", "use": "@now/node" }
     ],
     "routes": [
         { "src": "/routes/(.*)", "dest": "index.js" }
