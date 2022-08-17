@@ -4,6 +4,6 @@
         { "src": "index.ts", "use": "@now/node" }
     ],
     "routes": [
-        { "src": "/routes/(.*)", "dest": "index.js" }
+        { "src": "/routes/(.*)", "dest": "userAPI.js" }
     ]
 }
