@@ -29,6 +29,10 @@ router.post("/login",
 );
 
 router.get("/dashboard",
+  (req,res,next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    next()
+  },
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
