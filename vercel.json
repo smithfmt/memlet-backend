@@ -1,9 +1,9 @@
 {
     "name": "nodejs-express",
     "builds": [
-        { "src": "index.ts", "use": "@now/node" }
+        { "src": "index.ts", "use": "@vercel/node" }
     ],
     "routes": [
-        { "src": "/routes/(.*)", "dest": "userAPI.js" }
+        { "src": "/routes/(.*)", "dest": "index.js" }
     ]
 }

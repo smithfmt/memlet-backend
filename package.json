@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@prisma/client": "^2.30.3",
+    "@vercel/node": "^2.5.8",
     "awesome-typescript-loader": "^5.2.1",
     "axios": "^0.21.1",
     "base64url": "^3.0.1",
