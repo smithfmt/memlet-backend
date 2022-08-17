@@ -21,6 +21,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.options('*', cors({origin: 'http://memlet-frontend.vercel.app',optionsSuccessStatus: 200}));
 app.use("/", userAPIRouter);
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
