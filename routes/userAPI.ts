@@ -3,12 +3,18 @@ import { PrismaClient } from "@prisma/client";
 import userController from "../controllers/userController";
 import answerController from "../controllers/answerController";
 import passport from "passport";
+import cors from "cors";
 import jwt from "jsonwebtoken";
 import { slugify } from "../helpers";
 const router = express.Router();
 router.use(express.json());
 
 const prisma = new PrismaClient();
+
+const corsOptions = {
+  origin: 'http://memlet-frontend.vercel.app',
+  optionsSuccessStatus: 200
+};
 
 // Api is Working //
 
@@ -19,16 +25,19 @@ router.get("/", (req, res, next) => {
 // Routes
 
 router.post("/signup",
+  cors(corsOptions),
   userController.validateSignup,
   userController.signup,
 );
 
 router.post("/login",
+  cors(corsOptions),  
   userController.validateLogin,
   userController.login,
 );
 
 router.get("/dashboard",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
@@ -50,6 +59,7 @@ router.get("/dashboard",
 );
 
 router.post("/create",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
@@ -86,6 +96,7 @@ router.post("/create",
 );
 
 router.get("/edit",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
@@ -106,6 +117,7 @@ router.get("/edit",
 );
 
 router.put("/edit",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     console.log(req.body)
@@ -167,6 +179,7 @@ router.put("/edit",
 );
 
 router.delete("/edit",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
@@ -201,6 +214,7 @@ router.delete("/edit",
 );
 
 router.get("/play",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
@@ -221,11 +235,13 @@ router.get("/play",
 );
 
 router.post("/answer",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   answerController.checkAnswer
 );
 
 router.get("/stats",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
@@ -251,6 +267,7 @@ router.get("/stats",
 );
 
 router.get("/all-stats",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
@@ -283,6 +300,7 @@ router.get("/all-stats",
 );
 
 router.get("/dynamic",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub;
@@ -321,12 +339,14 @@ router.get("/dynamic",
 );
 
 router.put("/profile",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   userController.validateUpdate,
   userController.updateProfile,
 );
 
 router.get("/everything",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
@@ -350,6 +370,7 @@ router.get("/everything",
 );
 
 router.get("/everything-dynamic",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
@@ -392,6 +413,7 @@ router.get("/everything-dynamic",
 );
 
 router.get("/explore",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     let wordlists = await prisma.wordlist.findMany() as any;
@@ -420,6 +442,7 @@ router.get("/explore",
 );
 
 router.put("/copy",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const { id, copied } = req.body;
@@ -437,6 +460,7 @@ router.put("/copy",
 );
 
 router.put("/upvote",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const userId = jwt.decode(req.headers.authorization.split(" ")[1]).sub;
@@ -457,6 +481,7 @@ router.put("/upvote",
 );
 
 router.get("/explore-list",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub;
@@ -477,6 +502,7 @@ router.get("/explore-list",
 );
 
 router.post("/create-folder",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const { folder } = req.body;
@@ -505,6 +531,7 @@ router.post("/create-folder",
 );
 
 router.get("/folderById",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub;
@@ -528,6 +555,7 @@ router.get("/folderById",
 );
 
 router.put("/removeWordlistsFromFolder",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
@@ -568,6 +596,7 @@ router.put("/removeWordlistsFromFolder",
 );
 
 router.delete("/deleteFolder",
+  cors(corsOptions),
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
