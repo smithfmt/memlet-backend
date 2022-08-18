@@ -5,7 +5,7 @@ import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import cors from "cors";
 import passport from 'passport';
-import userAPIRouter from "./routes/userAPI";
+import userAPIRouter from "./api/userAPI";
 import passportConfig from "./config/passport";
 
 const app = express();
