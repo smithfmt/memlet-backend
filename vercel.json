@@ -1,6 +1,6 @@
 {
   "functions": {
-    "app.js": {
+    "app.ts": {
       "memory": 1024
     }
   },  
