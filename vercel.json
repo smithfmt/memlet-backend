@@ -1,8 +1,4 @@
 {
-    "name": "nodejs-express",
-    "builds": [
-        { "src": "index.ts", "use": "@vercel/node" }
-    ],
     "headers": [
         {
           "source": "/routes/(.*)",
