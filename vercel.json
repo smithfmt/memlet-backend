@@ -1,6 +1,6 @@
 {
   "functions": {
-    "userAPI.ts": {
+    "api/userAPI.ts": {
       "memory": 1024
     }
   },  
