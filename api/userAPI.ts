@@ -53,6 +53,10 @@ router.get("/dashboard",
   },
 );
 
+router.get("/bigtest", (req,res) => {
+  res.status(200).json({success: true, msg: "WORKING WELL INDEED"})
+})
+
 router.post("/create",
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
