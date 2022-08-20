@@ -1,5 +1,2 @@
-#!/usr/bin/env node
-/**
- * Module dependencies.
- */
-export {};
+declare const app: import("express-serve-static-core").Express;
+export default app;
