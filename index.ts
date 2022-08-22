@@ -21,7 +21,9 @@ app.all('/*', (req, res, next) => {
 app.use(logger('dev'));
 app.use(express.json());
 app.use("/", userAPIRouter);
-
+app.get("/mynewtest", (req,res) => {
+  res.send("THIS IS WORKING");
+})
 // error handler
 app.use((err, req, res, next) => {
   // set locals, only providing error in development
