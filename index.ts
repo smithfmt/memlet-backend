@@ -2,7 +2,7 @@ import express from 'express';
 import logger from 'morgan';
 import cors from "cors";
 import passport from 'passport';
-import userAPIRouter from "./api/userAPI";
+import userAPIRouter from "./routes/userAPI";
 import passportConfig from "./config/passport";
 
 const app = express();
