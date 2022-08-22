@@ -71,7 +71,7 @@ export const login = async (req, res, next) => {
         } else {
             res.status(401).json({ success: false, msg: "Sorry! You entered the wrong username or password" });
         };
-    } catch (err) {next(err)};
+    } catch (err) {res.status(401).json({ success: false, msg: "Error contacting Database", error: err })};
 };
 
 export const validateUpdate = [
