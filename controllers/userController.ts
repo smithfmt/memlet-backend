@@ -23,7 +23,6 @@ export const validateSignup = [
 export const signup = async (req, res) => {
     const saltHash = genPassword(req.body.password);
     const { salt, hash} = saltHash;
-    console.log(saltHash)
     try {
         const user = await prisma.user.create({
             data: {
@@ -37,7 +36,7 @@ export const signup = async (req, res) => {
         res.status(200).json({ success: true, user, token: jwt.token, expiresIn: jwt.expires });
     } catch (e) {
         console.log(e);
-        res.status(401).json({ success: false, msg: "Error contacting Database", error: e })
+        res.status(401).json({ success: false, msg: `Error contacting Database ${process.env.DATABASE_URL}`, error: e });
     };
 };
 
