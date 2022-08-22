@@ -11,9 +11,8 @@ const app = express();
 passportConfig(passport);
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(cors());
+app.use(cors());  
 app.all('/*', (req, res, next) => {
-  console.log("ADDING HEADER")
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "X-Requested-With");
   next();

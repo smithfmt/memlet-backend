@@ -92,7 +92,6 @@ export const validateUpdate = [
 ];
 
 export const updateProfile = async (req, res, next) => {
-    console.log("updating!!!")
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
     const { name, username, newPassword, oldPassword, avatar } = req.body;
     const user = await prisma.user.findUnique({
@@ -106,9 +105,9 @@ export const updateProfile = async (req, res, next) => {
     };
     const saltHash = genPassword(newPassword);
     const { salt, hash} = saltHash;
-
+    console.log("updating", username, name, avatar)
     try {
-        const user = prisma.user.update({
+        const user = await prisma.user.update({
             where :{
                 id: parseInt(id),
             },
@@ -120,8 +119,9 @@ export const updateProfile = async (req, res, next) => {
                 avatar,
             },
         })
+        console.log(user)
         res.status(200).json({ success: true, msg: "Successfully updated user!", user })
-    } catch(e) {res.status(401).json({ success: false, msg: "Sorry! That username is already taken!", error: e })};
+    } catch(e) {res.status(401).json({ success: false, msg: "Error contacting Database", error: e })};
 };
 
 export default {
