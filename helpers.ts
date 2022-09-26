@@ -20,33 +20,67 @@ export const slugify = str => {
 export const compare = (str1, str2) => {
     let position = 0;
     let score = 0;
-    const result = [];
+    let result = [];
     let last = true;
     let offset = false;
-    const test = str1.split("");
-    const answer = str2.split("");
-    test.forEach(char => {
-        if (answer[position]===char) {
+    let wrong = 0;
+    let test = str1.toLowerCase();
+    let answer = str2.toLowerCase();
+    if (answer.match(/\(.*?\)/)) {
+        if (!test.match(/\(.*?\)/)) {
+            answer = answer.split(/\(.*?\)/)[0].trim();
+        };
+    };
+    const testArr = test.split("");
+    const answerArr = answer.split("");
+    testArr.forEach(char => {
+        if (wrong>1) {
+            result.push({char, correct: "incorrect"});
+            position++;
+            return;
+        };
+        if (answerArr[position]===char) {
             result.push({char, correct: "correct"});
             score++;
             last = true;
-        } else if ((last===false || offset===true) && answer[position-1]===char) {
+            position++;
+            return;
+        };
+        if ((last===false || offset===true) && answerArr[position-1]===char) {
             result.push({char, correct: "correct"});
             score++;
             last = true;
             offset = true;
-        } else {
-            result.push({char, correct: "incorrect"});
-            last = false;
+            position++;
+            return;
         };
+        result.push({char, correct: "incorrect"});
+        last = false;
         position++;
+        wrong++;
     });
-    if (test.length < answer.length) {
-        const remaining = answer.slice(test.length);
+    if (testArr.length < answerArr.length&&wrong<2&&result[result.length-1].correct==="correct") {
+        const remaining = answerArr.slice(testArr.length);
         remaining.forEach((char) => {
             result.push({char, correct: "incorrect"});
         });
     };
-    const percentage = test.length>answer.length-1 ? Math.floor((score/test.length)*100) : Math.floor((score/answer.length)*100);
+    if (wrong>1) {
+        let firstWrong = false;
+        result = result.map((res, i) => {
+            if (i===result.length-1 && testArr.length === answerArr.length) {
+                if (res.char === answerArr[answerArr.length-1]) {
+                    return {char: res.char, correct: "correct"};
+                };
+            };
+            if (firstWrong) {
+                if (res.correct==="correct") score = score-1;
+                res.correct = "incorrect";
+            };
+            if (res.correct==="incorrect") firstWrong = true;
+            return res;
+        });
+    };
+    const percentage = testArr.length>answerArr.length-1 ? Math.floor((score/testArr.length)*100) : Math.floor((score/answerArr.length)*100);
     return [result, percentage];
 };
