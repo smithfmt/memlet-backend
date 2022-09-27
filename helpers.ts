@@ -17,7 +17,7 @@ export const slugify = str => {
     return str;
 };
 
-export const compare = (str1, str2) => {
+export const compare = (str1, str2, langs) => {
     let position = 0;
     let score = 0;
     let result = [];
@@ -31,6 +31,37 @@ export const compare = (str1, str2) => {
             answer = answer.split(/\(.*?\)/)[0].trim();
         };
     };
+
+    const defarticles = ["τό","το","ὁ","ἡ"];
+
+    if (langs[langs.selectedLang]==="greek") {
+        let wordType = "unknown";
+        const splitAnswer = answer.split(",");
+        if (splitAnswer.length===3) {
+            if (defarticles.includes(splitAnswer[2])) {
+                wordType = "noun";
+            } else {
+                wordType = "adj";
+            };
+        };
+        if (splitAnswer.length===2) wordType = "adj";
+        const splitTest = test.split(",");
+        if (splitTest.length!==splitAnswer.length) {
+            switch (wordType) {
+                case "noun":
+                    if (splitTest.length===1) answer = splitAnswer[0];
+                    break;
+                case "adj":
+                    if (splitTest.length===1) answer = splitAnswer[0];
+                    break;
+                case "verb":
+                    break;
+                default: break;
+            };
+        };
+    }
+
+    // compare the test and answer values //
     const testArr = test.split("");
     const answerArr = answer.split("");
     testArr.forEach(char => {
