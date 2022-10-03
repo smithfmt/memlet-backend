@@ -33,33 +33,42 @@ export const compare = (str1, str2, langs) => {
     };
 
     const defarticles = ["τό","το","ὁ","ἡ"];
-
-    if (langs[langs.selectedLang]==="greek") {
-        let wordType = "unknown";
-        const splitAnswer = answer.split(",");
-        if (splitAnswer.length===3) {
-            if (defarticles.includes(splitAnswer[2])) {
-                wordType = "noun";
-            } else {
-                wordType = "adj";
+    const splitAnswer = answer.split(",");
+    const splitTest = test.split(",");
+    switch (langs[langs.selectedLang]) {
+        case "greek" :
+            let wordType = "unknown";
+            if (splitAnswer.length===3) {
+                if (defarticles.includes(splitAnswer[2])) {
+                    wordType = "noun";
+                } else {
+                    wordType = "adj";
+                };
             };
-        };
-        if (splitAnswer.length===2) wordType = "adj";
-        const splitTest = test.split(",");
-        if (splitTest.length!==splitAnswer.length) {
-            switch (wordType) {
-                case "noun":
-                    if (splitTest.length===1) answer = splitAnswer[0];
-                    break;
-                case "adj":
-                    if (splitTest.length===1) answer = splitAnswer[0];
-                    break;
-                case "verb":
-                    break;
-                default: break;
+            if (splitAnswer.length===2) wordType = "adj";
+            if (splitTest.length!==splitAnswer.length) {
+                switch (wordType) {
+                    case "noun":
+                        if (splitTest.length===1) answer = splitAnswer[0];
+                        break;
+                    case "adj":
+                        if (splitTest.length===1) answer = splitAnswer[0];
+                        console.log("answer",answer)
+                        break;
+                    case "verb":
+                        break;
+                    default: break;
+                };
             };
-        };
-    }
+            break;
+        case "english":
+            const result = splitTest.reduce((acc, cur) => {
+                if (!splitAnswer.includes(cur)) return false;
+                return true;
+            },true);
+            if (result) answer = test;
+            break;
+    };
 
     // compare the test and answer values //
     const testArr = test.split("");
