@@ -61,7 +61,7 @@ router.post("/create",
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
-    const { words, title, langs } = req.body.wordlist;
+    const { words, title, langs, priv } = req.body.wordlist;
     if (!words.length) {
       res.status(401).json({ success: false, msg: `No Words Submitted` });
     } else if (!title) {
@@ -75,6 +75,7 @@ router.post("/create",
           reference: ref,
           userId: parseInt(id),
           length: words.length,
+          private: priv
         },
       });
       words.map(item => {
@@ -118,7 +119,7 @@ router.put("/edit",
   async (req, res, next) => {
     console.log(req.body)
     const jwtId = jwt.decode(req.headers.authorization.split(" ")[1]).sub;
-    const { userId, title, langs, id, wordlist, toDelete } = req.body;
+    const { userId, title, langs, id, wordlist, toDelete, priv } = req.body;
     if (jwtId === userId) {
       if (!title) {
         res.status(401).json({ success: false, msg: `No Title Submitted` });
@@ -133,6 +134,7 @@ router.put("/edit",
             langs,
             reference: slugify(title),
             length: wordlist.length,
+            private: priv,
           },
         });
         wordlist.forEach(async entry => {
@@ -590,6 +592,24 @@ router.delete("/deleteFolder",
       res.status(401).json({ success: false, msg: "You don't own this folder!" });
     });
     res.status(200).json({ success: true, msg: "Successfully deleted folder!" });
+  },
+);
+
+router.put("/privatize",
+passport.authenticate("jwt", {session: false}),
+async (req, res, next) => {
+  const { id, priv } = req.body;
+  prisma.wordlist.update({
+    where: {
+      id,
+    },
+    data: {
+      private: !priv,
+    },
+  })
+  .then((response) => {console.log(response.upvoted)
+  res.status(200).json({ success: true, msg: "Successfully privatized!", response })})
+  .catch(() => res.status(401).json({ success: false, msg: "Error contacting database!" }));
   },
 );
 
