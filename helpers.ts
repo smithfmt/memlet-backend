@@ -98,14 +98,14 @@ export const compare = (str1, str2, langs, strict) => {
             position++;
             return;
         };
-        if (answerArr[position]===char||(strict===false&&greekAccents[char].includes(answerArr[position]))) {
+        if (answerArr[position]===char||(strict===false&&greekAccents[char]&&greekAccents[char].includes(answerArr[position]))) {
             result.push({char, correct: "correct"});
             score++;
             last = true;
             position++;
             return;
         };
-        if ((last===false || offset===true) && answerArr[position-1]===char||(strict===false&&greekAccents[char].includes(answerArr[position-1]))) {
+        if ((last===false || offset===true) && answerArr[position-1]===char||(strict===false&&greekAccents[char]&&greekAccents[char].includes(answerArr[position-1]))) {
             result.push({char, correct: "correct"});
             score++;
             last = true;
