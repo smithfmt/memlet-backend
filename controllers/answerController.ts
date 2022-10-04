@@ -2,8 +2,8 @@ import { compare } from "../helpers";
 import prisma from "../libs/prisma";
 
 export const checkAnswer = async (req, res, next) => {
-    const { answer, correct, wordlistItemId, langs } = req.body;
-    const result = compare(answer, correct, langs);
+    const { answer, correct, wordlistItemId, langs, strict } = req.body;
+    const result = compare(answer, correct, langs, strict);
     let isCorrect = false;
     if (result[1]===100) {isCorrect=true};
     try {

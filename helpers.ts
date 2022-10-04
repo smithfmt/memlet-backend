@@ -17,7 +17,7 @@ export const slugify = str => {
     return str;
 };
 
-export const compare = (str1, str2, langs) => {
+export const compare = (str1, str2, langs, strict) => {
     let position = 0;
     let score = 0;
     let result = [];
@@ -34,6 +34,13 @@ export const compare = (str1, str2, langs) => {
 
     const defarticles = ["τό","το","ὁ","ἡ"];
     const engParticles = ["a", "the", "A", "The", "I"];
+    const GreekAccentsData = "ἐἒἔ ἑἓἕ εέὲ ΕΈῈ ἘἚἜ ἙἛἝ αάὰᾶᾳᾲᾷᾴ ἀἂἄἆᾀᾂᾄᾆ ἁἃἅἇᾁᾃᾅᾇ ΑΆᾺᾼ ἈἊἌἎᾈᾊᾌᾎ ἉἋἍἏᾉᾋᾍᾏ ηήὴῆῃῂῇῄ ἠἢἤἦᾐᾒᾔᾖ ἡἣἥἧᾑᾓᾕᾗ ΗΉῊῌ ἨἪἬἮᾘᾚᾜᾞ ἩἫἭἯᾙᾛᾝᾟ ιίὶῖ ἰἲἴἶ ἱἳἵἷ ΙΊῚ ἸἺἼἾ ἹἻἽἿ οόὸ ὀὂὄ ὁὃὅ ΟΌῸ ὈὊὌ ὉὋὍ υύὺῦ ὐὒὔὖ ὑὓὕὗ ΥΎῪ ὙὛὝὟ ωώὼῶῳῲῷῴ ὠὢὤὦᾠᾢᾤᾦ ὡὣὥὧᾡᾣᾥᾧ ΩΏῺῼ ὨὪὬὮᾨᾪᾬᾮ ὩὫὭὯᾩᾫᾭᾯ";
+    const greekAccents = {};
+    GreekAccentsData.split(" ").forEach(accent => {
+        let splitAccent = accent.split("");
+        splitAccent.shift();
+        greekAccents[accent[0]] = splitAccent.join();
+    });
     const splitAnswer = answer.split(", ");
     const splitTest = test.split(", ");
     switch (langs[langs.selectedLang]) {
@@ -54,6 +61,7 @@ export const compare = (str1, str2, langs) => {
                         break;
                     case "adj":
                         if (splitTest.length===1) answer = splitAnswer[0];
+                        console.log("answer",answer)
                         break;
                     case "verb":
                         break;
@@ -79,7 +87,8 @@ export const compare = (str1, str2, langs) => {
             break;
         default: break;
     };
-
+    
+    
     // compare the test and answer values //
     const testArr = test.split("");
     const answerArr = answer.split("");
@@ -89,14 +98,14 @@ export const compare = (str1, str2, langs) => {
             position++;
             return;
         };
-        if (answerArr[position]===char) {
+        if (answerArr[position]===char||(strict===false&&greekAccents[char].includes(answerArr[position]))) {
             result.push({char, correct: "correct"});
             score++;
             last = true;
             position++;
             return;
         };
-        if ((last===false || offset===true) && answerArr[position-1]===char) {
+        if ((last===false || offset===true) && answerArr[position-1]===char||(strict===false&&greekAccents[char].includes(answerArr[position-1]))) {
             result.push({char, correct: "correct"});
             score++;
             last = true;
