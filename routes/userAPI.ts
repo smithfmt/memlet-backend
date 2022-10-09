@@ -78,7 +78,7 @@ router.post("/create",
           private: priv
         },
       });
-      words.map(item => {
+      const newWords = words.map(item => {
         item.wordlistId = result.id;
         item.langs = langs;
         delete item.id;
@@ -86,7 +86,7 @@ router.post("/create",
       });
       await prisma.wordlist_item.createMany({
         data: [
-          ...words
+          ...newWords
         ],
       });
       res.status(200).json({ success: true, msg: `Successfully Posted to DB` })
@@ -117,7 +117,6 @@ router.get("/edit",
 router.put("/edit",
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
-    console.log(req.body)
     const jwtId = jwt.decode(req.headers.authorization.split(" ")[1]).sub;
     const { userId, title, langs, id, wordlist, toDelete, priv } = req.body;
     if (jwtId === userId) {
@@ -214,19 +213,49 @@ router.get("/play",
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
-    const wordlist = await prisma.wordlist.findUnique({
-      where :{
-        id: parseInt(req.query.id as string),
-      },
-      include :{
-        words: true,
-      },
-    });
-    if (parseInt(id) === wordlist.userId) {
-      res.status(200).json({ success: true, msg: "Here is your wordlist!", wordlist });
+    let wordlist;
+    let folderId = parseInt(req.query.folderId as string);
+    if (folderId) {
+      const wordlists = await prisma.wordlist.findMany({
+        where :{
+          folderId,
+        },
+        include: {
+          words: true,
+        },
+      });
+      const folder = await prisma.folder.findUnique({
+        where: {
+          id: folderId,
+        },
+      });
+      let folderList = {words: [], userId: folder.userId, length: 0, langs: "english-english", title: "folderlist"};
+      wordlists.forEach(listObj => {
+        folderList.words = [...folderList.words, ...listObj.words];
+        folderList.length = folderList.length + listObj.words.length;
+        folderList.langs = listObj.langs
+        folderList.title = folder.name
+      });
+      if (parseInt(id) === folder.userId) {
+        res.status(200).json({ success: true, msg: "Here is your folderList!", wordlist: folderList });
+      } else {
+        res.status(401).json({ success: false, msg: "This folder does not belong to this user!" });
+      };
     } else {
-      res.status(401).json({ success: false, msg: "This wordlist does not belong to this user!" });
-    };
+      wordlist = await prisma.wordlist.findUnique({
+        where :{
+          id: parseInt(req.query.id as string),
+        },
+        include :{
+          words: true,
+        },
+      });
+      if (parseInt(id) === wordlist.userId) {
+        res.status(200).json({ success: true, msg: "Here is your wordlist!", wordlist });
+      } else {
+        res.status(401).json({ success: false, msg: "This wordlist does not belong to this user!" });
+      };
+    };   
   },
 );
 
@@ -260,6 +289,41 @@ router.get("/stats",
   },
 );
 
+router.get("/folder-stats",
+  passport.authenticate("jwt", {session: false}),
+  async (req, res, next) => {
+    const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
+    const folder = await prisma.folder.findUnique({
+      where :{
+        id: parseInt(req.query.id as string),
+      },
+      include : {
+        wordlists: true,
+      },
+    });
+    const wordlistIds = folder.wordlists.map(list => {return list.id});
+    if (folder.userId === parseInt(id)) {
+      const wordlistItems = await prisma.wordlist_item.findMany({
+        where :{
+          wordlistId: { in: wordlistIds },
+        },
+        include :{
+          test_answers: true,
+        },
+      });
+      let answers = [];
+      wordlistItems.forEach(item => answers = [...answers, ...item.test_answers]);
+      const sortedListItems = wordlistItems.sort((a,b) => {
+        const reducer = (acc, cur) => {acc + (cur.correct ? 1 : -1); }
+        return b.test_answers.reduce(reducer, 0) - a.test_answers.reduce(reducer, 0);
+      });
+      res.status(200).json({ success: true, msg: "Here is your wordlist!", wordlistItems: sortedListItems, answers });
+    } else {
+      res.status(401).json({ success: false, msg: "This wordlist does not belong to this user!" });
+    };
+  },
+);
+
 router.get("/all-stats",
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
@@ -284,32 +348,46 @@ router.get("/all-stats",
       const reducer = (acc, cur) => {acc + (cur.correct ? 1 : -1); }
       return b.test_answers.reduce(reducer, 0) - a.test_answers.reduce(reducer, 0);
     });
-    // if (wordlist.userId === id) {
-      res.status(200).json({ success: true, msg: "Here is your wordlist!", wordlistItems: sortedListItems, answers });
-    // } else {
-    //   res.status(401).json({ success: false, msg: "This wordlist does not belong to this user!" });
-    // };
+res.status(200).json({ success: true, msg: "Here is your wordlist!", wordlistItems: sortedListItems, answers });
   },
 );
 
 router.get("/dynamic",
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
-    const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub;
-    const wordlistItems = await prisma.wordlist_item.findMany({
-      where :{
-        wordlistId: parseInt(req.query.id as string),
-      },
-      include :{
-        test_answers: true,
-      },
-    });
-    const wordlist = await prisma.wordlist.findUnique({
-      where :{
-        id: parseInt(req.query.id as string),
-      },
-    }) as any;
-    wordlist.words = wordlistItems.sort((prev, next) => {
+    const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
+    let folderId = parseInt(req.query.folderId as string);
+    if (folderId) {
+      const wordlists = await prisma.wordlist.findMany({
+        where :{
+          folderId,
+        },
+        include: {
+          words: true,
+        },
+      });
+      const folder = await prisma.folder.findUnique({
+        where: {
+          id: folderId,
+        },
+      });
+      let folderList = {words: [], userId: folder.userId, length: 0, langs: "english-english"};
+      wordlists.forEach(listObj => {
+        folderList.length = folderList.length + listObj.words.length;
+        folderList.langs = listObj.langs
+      });
+      const wordlistIds = wordlists.map(list => {return list.id});
+      const wordlistItems = await prisma.wordlist_item.findMany({
+        where: {
+          wordlistId: {
+            in: wordlistIds,
+          },
+        },
+        include: {
+          test_answers: true,
+        },
+      });
+      folderList.words = wordlistItems.sort((prev, next) => {
         let prevScore = 0;
         let nextScore = 0;
         prev.test_answers.forEach(ans => {
@@ -321,11 +399,44 @@ router.get("/dynamic",
             if (!ans.correct) nextScore--
         });
         return prevScore - nextScore;
-    });
-    if (wordlist.userId === id) {
-      res.status(200).json({ success: true, msg: "Here is your wordlist!", wordlist });
+      });
+      if (parseInt(id) === folder.userId) {
+        res.status(200).json({ success: true, msg: "Here is your folderList!", wordlist: folderList });
+      } else {
+        res.status(401).json({ success: false, msg: "This folder does not belong to this user!" });
+      };
     } else {
-      res.status(401).json({ success: false, msg: "This wordlist does not belong to this user!" });
+      const wordlistItems = await prisma.wordlist_item.findMany({
+        where :{
+          wordlistId: parseInt(req.query.id as string),
+        },
+        include :{
+          test_answers: true,
+        },
+      });
+      const wordlist = await prisma.wordlist.findUnique({
+        where :{
+          id: parseInt(req.query.id as string),
+        },
+      }) as any;
+      wordlist.words = wordlistItems.sort((prev, next) => {
+          let prevScore = 0;
+          let nextScore = 0;
+          prev.test_answers.forEach(ans => {
+              prevScore = prevScore + (ans.correct_percentage/100);
+              if (!ans.correct) prevScore--
+          });
+          next.test_answers.forEach(ans => {
+              nextScore = nextScore + (ans.correct_percentage/100);
+              if (!ans.correct) nextScore--
+          });
+          return prevScore - nextScore;
+      });
+      if (wordlist.userId === id) {
+        res.status(200).json({ success: true, msg: "Here is your wordlist!", wordlist });
+      } else {
+        res.status(401).json({ success: false, msg: "This wordlist does not belong to this user!" });
+      };
     };
   },
 );
@@ -432,17 +543,80 @@ router.get("/explore",
 router.put("/copy",
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
-    const { id, copied } = req.body;
-    prisma.wordlist.update({
-      where: {
-        id,
-      },
-      data: {
-        copied: copied+1,
-      },
-    })
-    .then(() => res.status(200).json({ success: true, msg: "Successfully added 1 to copied!" }))
-    .catch(() => res.status(401).json({ success: false, msg: "Error contacting database!" }));
+    const { id, copied, folder } = req.body;
+    if (folder) {
+      const userId = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
+      await prisma.folder.update({
+        where: {
+          id,
+        },
+        data: {
+          copied: copied+1,
+        },
+      }).catch(() => res.status(401).json({ success: false, msg: "Error contacting database!" }));
+      const newFolder = await prisma.folder.create({
+        data: {
+          name: folder.name,
+          length: folder.length,
+          userId: parseInt(userId),
+        },
+      })
+      const newWordlists = folder.wordlists.map(list => {
+        list.userId = userId;
+        list.upvoted = [];
+        list.copied = 0;
+        list.folderId = newFolder.id;
+        list.private = true;
+        delete list.created;
+        delete list.id;
+        return list;
+      });
+      await prisma.wordlist.createMany({
+        data: [
+          ...newWordlists,
+        ],
+      }).catch(() => res.status(401).json({ success: false, msg: "Error creating new" }));
+      const createdWordlists = await prisma.wordlist.findMany({
+        where: {
+          folderId: newFolder.id,
+        },
+      }).catch(() => res.status(401).json({ success: false, msg: "Error creating new" })) as any;
+      let words = [];
+      const folderWordlists = await prisma.wordlist.findMany({
+        where: {
+          folderId: folder.id,
+        },
+        include: {
+          words: true,
+        },
+      });
+      folderWordlists.forEach(list => {
+        const newListId = createdWordlists.filter(ls => {return ls.title===list.title})[0].id;
+        list.words.forEach(word => {
+          const newWord = {...word};
+          newWord.wordlistId = newListId;
+          delete newWord.id;
+          words.push(newWord);
+        });
+      })
+      await prisma.wordlist_item.createMany({
+        data: [
+          ...words,
+        ],
+      }).catch(() => res.status(401).json({ success: false, msg: "Error contacting database!" }));
+      res.status(200).json({ success: true, msg: "Successfully added 1 to copied!" });
+    } else {
+      prisma.wordlist.update({
+        where: {
+          id,
+        },
+        data: {
+          copied: copied+1,
+        },
+      })
+      .then(() => res.status(200).json({ success: true, msg: "Successfully added 1 to copied!" }))
+      .catch(() => res.status(401).json({ success: false, msg: "Error contacting database!" }));
+    };
   },
 );
 
@@ -450,19 +624,33 @@ router.put("/upvote",
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const userId = jwt.decode(req.headers.authorization.split(" ")[1]).sub;
-    const { id, upvoted } = req.body;
+    const { id, upvoted, wordlists } = req.body;
     const newUpvoted = !upvoted.includes(userId) ? [...upvoted, userId] : upvoted.filter(id => id!==userId);
-    prisma.wordlist.update({
-      where: {
-        id,
-      },
-      data: {
-        upvoted: newUpvoted,
-      },
-    })
-    .then((response) => {console.log(response.upvoted)
-    res.status(200).json({ success: true, msg: "Successfully upvoted!", response })})
-    .catch(() => res.status(401).json({ success: false, msg: "Error contacting database!" }));
+    if (wordlists) {
+      prisma.folder.update({
+        where: {
+          id,
+        },
+        data: {
+          upvoted: newUpvoted,
+        },
+      })
+      .then((response) => {
+      res.status(200).json({ success: true, msg: "Successfully upvoted!", response })})
+      .catch(() => res.status(401).json({ success: false, msg: "Error contacting database!" }));
+    } else {
+      prisma.wordlist.update({
+        where: {
+          id,
+        },
+        data: {
+          upvoted: newUpvoted,
+        },
+      })
+      .then((response) => {
+      res.status(200).json({ success: true, msg: "Successfully upvoted!", response })})
+      .catch(() => res.status(401).json({ success: false, msg: "Error contacting database!" }));
+    };
   },
 );
 
@@ -514,6 +702,25 @@ router.post("/create-folder",
   },
 );
 
+router.get("/folderByIdExplore",
+  passport.authenticate("jwt", {session: false}),
+  async (req, res, next) => {
+    const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub;
+    const folder = await prisma.folder.findUnique({
+      where: {
+        id: parseInt(req.query.id as string),
+      },
+      include: {
+        wordlists: true,
+      },
+    })
+    .catch(err => {
+      res.status(401).json({ success: false, msg: "No Folder Found!" });
+    }) as any
+    res.status(200).json({ success: true, msg: "Here is your folder", folder, user: id });
+  },
+);
+
 router.get("/folderById",
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
@@ -530,20 +737,50 @@ router.get("/folderById",
       res.status(401).json({ success: false, msg: "No Folder Found!" });
     }) as any
     if (folder.userId===id) {
-      res.status(200).json({ success: true, msg: "Here is your folder", folder });
+      res.status(200).json({ success: true, msg: "Here is your folder", folder, user: id });
     } else {
       res.status(401).json({ success: false, msg: "That folder doesn't belong to you!" });
     };
   },
 );
 
-router.put("/removeWordlistsFromFolder",
+router.get("/publicFolders",
+  passport.authenticate("jwt", {session: false}),
+  async (req, res, next) => {
+    const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub;
+    let folders = await prisma.folder.findMany()
+    .catch(err => {
+      res.status(401).json({ success: false, msg: "No Folder Found!" });
+    }) as any;
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        avatar: true,
+      },
+    })
+    .catch(err => {
+      res.status(401).json({ success: false, msg: "No users Found!" });
+    });
+    folders&&users ? folders.forEach(folder => {
+      folder.user = users.filter(user => {return user.id === folder.userId})[0];
+    }) : folders = [];
+    res.status(200).json({ success: true, msg: "Here are public folders", folders });
+  },
+);
+
+router.put("/updateFolder",
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
+    const { folderId, idArray } = req.body;
     const folder = await prisma.folder.findUnique({
       where: {
-        id: parseInt(req.body.folderId),
+        id: parseInt(folderId),
+      },
+      include: {
+        wordlists: true,
       },
     });
     if (parseInt(id)!==folder.userId) {
@@ -551,29 +788,59 @@ router.put("/removeWordlistsFromFolder",
     } else {
       const updateFolder = prisma.folder.update({
         where: {
-          id: parseInt(req.body.folderId),
+          id: parseInt(folderId),
         },
         data: {
-          length: req.body.length,
+          length: idArray.length,
         },
       })
       .catch(err => {
         res.status(401).json({ success: false, msg: "No Folder Found!" });
       });
-      const updateWordlists = prisma.wordlist.updateMany({
+      const currentlyAdded = folder.wordlists.map(list => {return list.id});
+      const toDelete = currentlyAdded.filter(id => {return !idArray.includes(id)});
+      const toAdd = idArray.filter(id => {return !currentlyAdded.includes(id)});
+      const removeWordlists = prisma.wordlist.updateMany({
         where: {
-          id: {in: req.body.idArray},
+          id: {in: toDelete},
         },
         data: {
           folderId: null,
         },
       })
       .catch(err => {
-        res.status(401).json({ success: false, msg: "No Folder Found!" });
+        res.status(401).json({ success: false, msg: "error removing" });
       });
-      await Promise.all([updateFolder, updateWordlists]);
+      const addWordlists = prisma.wordlist.updateMany({
+        where: {
+          id: {in: toAdd},
+        },
+        data: {
+          folderId: parseInt(folderId),
+        },
+      })
+      .catch(err => {
+        res.status(401).json({ success: false, msg: "error adding" });
+      });
+      await Promise.all([updateFolder, removeWordlists, addWordlists]);
       res.status(200).json({ success: true, msg: "Here is your folder", folder });
     };
+  },
+);
+
+router.get("/noFolderLists",
+  passport.authenticate("jwt", {session: false}),
+  async (req, res, next) => {
+    const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub;
+    const wordlists = await prisma.wordlist.findMany({
+      where: {
+        folderId: null,
+        userId: parseInt(id as string),
+      },
+    }).catch(err => {
+      res.status(401).json({ success: false, msg: "No lists Found!" });
+    });
+    res.status(200).json({ success: true, msg: "Here are your folderless wordlists", wordlists });
   },
 );
 
@@ -581,16 +848,35 @@ router.delete("/deleteFolder",
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
     const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
-    console.log(req.query)
-    await prisma.folder.deleteMany({
+    const folder = await prisma.folder.findMany({
       where: {
-        id: parseInt(req.query.wordlistId as string),
+        id: parseInt(req.query.folderId as string),
         userId: parseInt(id),
       },
-    })
-    .catch(err => {
-      res.status(401).json({ success: false, msg: "You don't own this folder!" });
+      include: {
+        wordlists: true,
+      },
+    }).catch(err => {
+      return res.status(401).json({ success: false, msg: "You don't own this folder!" });
+    }) as any;
+    if (folder.wordlists&&folder.wordlists.length) {
+      const idArray = folder.wordlists.map(list => {return list.id});
+      await prisma.wordlist.updateMany({
+        where: {
+          id: {in: idArray}
+        },
+        data: {
+          folderId: null,
+        },
+      });
+    };
+    
+    await prisma.folder.delete({
+      where: {
+        id: parseInt(req.query.folderId as string),
+      },
     });
+
     res.status(200).json({ success: true, msg: "Successfully deleted folder!" });
   },
 );
@@ -607,7 +893,7 @@ async (req, res, next) => {
       private: !priv,
     },
   })
-  .then((response) => {console.log(response.upvoted)
+  .then((response) => {
   res.status(200).json({ success: true, msg: "Successfully privatized!", response })})
   .catch(() => res.status(401).json({ success: false, msg: "Error contacting database!" }));
   },
