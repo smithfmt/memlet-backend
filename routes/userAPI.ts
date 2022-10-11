@@ -899,4 +899,39 @@ async (req, res, next) => {
   },
 );
 
+router.delete("/stats",
+  passport.authenticate("jwt", {session: false}),
+  async (req, res, next) => {
+    const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
+    const ownedLists = await prisma.wordlist.findMany({
+      where: {
+        userId: parseInt(id),
+      },
+      include: {
+        words: true,
+      },
+    }) as any;
+    let listOfWords = [];
+    ownedLists.forEach(list => listOfWords = [...listOfWords, ...list.words]);
+    const listItemIds = listOfWords.map(wordlistItem => {return wordlistItem.id});
+    const wordlistItems = await prisma.wordlist_item.findMany({
+      where: {
+        id: {in:listItemIds},
+      },
+      include: {
+        test_answers: true,
+      },
+    }) as any;
+    let listOfAnswers = [];
+    wordlistItems.forEach(item => listOfAnswers = [...listOfAnswers, ...item.test_answers]);
+    const answerIds = listOfAnswers.map(answer => {return answer.id});
+    await prisma.test_answer.deleteMany({
+      where: {
+        id: {in:answerIds},
+      },
+    }).catch(err => {return res.status(403).json({ success: false, msg: "Failed to delete stats"})});
+    res.status(200).json({ success: true, msg: "Successfully deleted stats!" });
+  },
+);
+
 export default router;
