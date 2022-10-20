@@ -27,9 +27,12 @@ export const checkAnswer = async (req, res, next) => {
                 testAnswers: true,
             }
         });
+        console.log("USER", user)
         const testAnswerList = user.testAnswers.map(ans => {return {id: ans.id, created: ans.created}}).sort((a,b) => {return a.created.getTime()-b.created.getTime()});
+        console.log("testAnswerList", testAnswerList)
         if (testAnswerList.length>500) {
             const toDelete = testAnswerList.slice(0,testAnswerList.length-500).map(obj => {return obj.id})
+            console.log("toDelete",toDelete)
             await prisma.test_answer.deleteMany({
                 where: {
                     id: {in: toDelete}
