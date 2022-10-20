@@ -11,14 +11,15 @@ generator client {
 }
 
 model User {
-  id        Int        @id @default(autoincrement())
-  username  String     @unique
-  hash      String     @unique
-  salt      String     @unique
-  name      String     @default("NA")
-  avatar    String     @default("none")
-  wordlists Wordlist[] @relation("Wordlists")
-  folders   Folder[]
+  id          Int        @id @default(autoincrement())
+  username    String     @unique
+  hash        String     @unique
+  salt        String     @unique
+  name        String     @default("NA")
+  avatar      String     @default("none")
+  wordlists   Wordlist[] @relation("Wordlists")
+  folders     Folder[]
+  testAnswers Test_answer[] @relation("userid")
 }
 
 model Wordlist {
@@ -56,6 +57,9 @@ model Test_answer {
   correct_percentage Int
   wordlistItemId     Int
   wordlist_item      Wordlist_item @relation("Results", fields: [wordlistItemId], references: [id])
+  userId             Int 
+  user               User @relation("userid", fields: [userId], references: [id])
+  created            DateTime        @default(now())
 }
 
 model Folder {
