@@ -159,12 +159,31 @@ router.put("/edit",
           };
         });
         if (toDelete) {
-          toDelete.forEach(async id => {
-            await prisma.wordlist_item.delete({
-              where: {
-                id
+          const wordlistItems = await prisma.wordlist_item.findMany({
+            where: {
+              id: {in:toDelete},
+            },
+            include: {
+              test_answers: true,
+            },
+          });
+          const testAnswerIds = [];
+          wordlistItems.forEach(item => {
+            item.test_answers.forEach(ans => testAnswerIds.push(ans.id))
+          });
+          await prisma.test_answer.deleteMany({
+            where: {
+              id: {
+                in: testAnswerIds,
               },
-            });
+            },
+          });
+          await prisma.wordlist_item.deleteMany({
+            where: {
+              id: {
+                in: toDelete,
+              },
+            },
           });
         };
         res.status(200).json({ success: true, msg: "Successfully Updated your wordlist!" });

@@ -33,7 +33,7 @@ export const compare = (str1, str2, langs, strict) => {
     };
 
     const defarticles = ["τό","το","ὁ","ἡ"];
-    const engParticles = ["a", "the", "A", "The", "I"];
+    const engParticles = ["a", "the", "A", "The", "I", "i"];
     const GreekAccentsData = "ἐἒἔ ἑἓἕ εέὲ ΕΈῈ ἘἚἜ ἙἛἝ αάὰᾶᾳᾲᾷᾴ ἀἂἄἆᾀᾂᾄᾆ ἁἃἅἇᾁᾃᾅᾇ ΑΆᾺᾼ ἈἊἌἎᾈᾊᾌᾎ ἉἋἍἏᾉᾋᾍᾏ ηήὴῆῃῂῇῄ ἠἢἤἦᾐᾒᾔᾖ ἡἣἥἧᾑᾓᾕᾗ ΗΉῊῌ ἨἪἬἮᾘᾚᾜᾞ ἩἫἭἯᾙᾛᾝᾟ ιίὶῖ ἰἲἴἶ ἱἳἵἷ ΙΊῚ ἸἺἼἾ ἹἻἽἿ οόὸ ὀὂὄ ὁὃὅ ΟΌῸ ὈὊὌ ὉὋὍ υύὺῦ ὐὒὔὖ ὑὓὕὗ ΥΎῪ ὙὛὝὟ ωώὼῶῳῲῷῴ ὠὢὤὦᾠᾢᾤᾦ ὡὣὥὧᾡᾣᾥᾧ ΩΏῺῼ ὨὪὬὮᾨᾪᾬᾮ ὩὫὭὯᾩᾫᾭᾯ";
     const greekAccents = {};
     GreekAccentsData.split(" ").forEach(accent => {
@@ -69,22 +69,31 @@ export const compare = (str1, str2, langs, strict) => {
                 };
             };
             break;
-        case "english":
-            const answers = [...splitAnswer];
-            answers.forEach(ans => {
-                const splitAns = ans.split(" ");
-                if (engParticles.includes(splitAns[0])) {
-                    console.log(ans)
-                    splitAns.shift();
-                    answers.push(splitAns.join(" ").trim());
-            }})
-            console.log("answers", answers, splitTest)
-            const result = splitTest.reduce((acc, cur) => {
-                if (!answers.includes(cur)) return false;
-                return true;
-            },true);
-            if (result) answer = test;
-            break;
+            case "english":
+                const answers = [...splitAnswer];
+                answers.forEach(ans => {
+                    const splitAns = ans.split(" ");
+                    if (engParticles.includes(splitAns[0])) {
+                        splitAns.shift();
+                        answers.push(splitAns.join(" ").trim());
+                }})
+                const result = splitTest.reduce((acc, cur) => {
+                    if (!answers.includes(cur)) return false;
+                    return true;
+                },true);
+                if (result) {
+                    answer = test;
+                } else if (splitTest.length===1) {
+                    const spacedTest = splitTest[0].split(" ");
+                    if (engParticles.includes(spacedTest[0])) {
+                        spacedTest.shift();
+                        const noParticleTest = spacedTest.join(" ").trim();
+                        if (answers.includes(noParticleTest)) {
+                            answer = test;
+                        };
+                    };
+                };
+                break;
         default: break;
     };
     
