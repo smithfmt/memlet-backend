@@ -82,6 +82,8 @@ router.post("/create",
         item.wordlistId = result.id;
         item.langs = langs;
         delete item.id;
+        item.translation = item.translation.trim();
+        item.word = item.word.trim();
         return item;
       });
       await prisma.wordlist_item.createMany({
@@ -390,7 +392,7 @@ router.get("/dynamic",
           id: folderId,
         },
       });
-      let folderList = {words: [], userId: folder.userId, length: 0, langs: "english-english"};
+      let folderList = {words: [], userId: folder.userId, length: 0, langs: "english-english", title: folder.name};
       wordlists.forEach(listObj => {
         folderList.length = folderList.length + listObj.words.length;
         folderList.langs = listObj.langs
@@ -950,6 +952,111 @@ router.delete("/stats",
       },
     }).catch(err => {return res.status(403).json({ success: false, msg: "Failed to delete stats"})});
     res.status(200).json({ success: true, msg: "Successfully deleted stats!" });
+  },
+);
+
+router.get("/study",
+  passport.authenticate("jwt", {session: false}),
+  async (req, res, next) => {
+    const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
+    let folderId = parseInt(req.query.folderId as string);
+    if (folderId) {
+      const wordlists = await prisma.wordlist.findMany({
+        where :{
+          folderId,
+        },
+        include: {
+          words: true,
+        },
+      });
+      const folder = await prisma.folder.findUnique({
+        where: {
+          id: folderId,
+        },
+      });
+      let folderList = {words: [], userId: folder.userId, length: 0, langs: "english-english", title: folder.name};
+      wordlists.forEach(listObj => {
+        folderList.length = folderList.length + listObj.words.length;
+        folderList.langs = listObj.langs
+      });
+      const wordlistIds = wordlists.map(list => {return list.id});
+      const wordlistItems = await prisma.wordlist_item.findMany({
+        where: {
+          wordlistId: {
+            in: wordlistIds,
+          },
+        },
+        include: {
+          test_answers: true,
+        },
+      });
+      folderList.words = wordlistItems.filter((item) => {
+        const score = item.test_answers.reduce((acc, cur) => {
+          if (cur.correct_percentage<100) return acc-((100-cur.correct_percentage)/100);
+          return acc+cur.correct_percentage/100;
+        }, 0);
+        console.log(score)
+        if (score>0.99) return false;
+        return true;
+      }).sort((prev, next) => {
+        let prevScore = 0;
+        let nextScore = 0;
+        prev.test_answers.forEach(ans => {
+            prevScore = prevScore + (ans.correct_percentage/100);
+            if (!ans.correct) prevScore--
+        });
+        next.test_answers.forEach(ans => {
+            nextScore = nextScore + (ans.correct_percentage/100);
+            if (!ans.correct) nextScore--
+        });
+        return prevScore - nextScore;
+      });
+      folderList.length = folderList.words.length;
+      if (parseInt(id) === folder.userId) {
+        res.status(200).json({ success: true, msg: "Here is your folderList!", wordlist: folderList });
+      } else {
+        res.status(401).json({ success: false, msg: "This folder does not belong to this user!" });
+      };
+    } else {
+      const wordlistItems = await prisma.wordlist_item.findMany({
+        where :{
+          wordlistId: parseInt(req.query.id as string),
+        },
+        include :{
+          test_answers: true,
+        },
+      });
+      const wordlist = await prisma.wordlist.findUnique({
+        where :{
+          id: parseInt(req.query.id as string),
+        },
+      }) as any;
+      wordlist.words = wordlistItems.filter((item) => {
+        const score = item.test_answers.reduce((acc, cur) => {
+          if (cur.correct_percentage<100) return acc-((100-cur.correct_percentage)/100);
+          return acc+cur.correct_percentage/100;
+        }, 0);
+        if (score>0.99) return false;
+        return true;
+      }).sort((prev, next) => {
+        let prevScore = 0;
+        let nextScore = 0;
+        prev.test_answers.forEach(ans => {
+            prevScore = prevScore + (ans.correct_percentage/100);
+            if (!ans.correct) prevScore--
+        });
+        next.test_answers.forEach(ans => {
+            nextScore = nextScore + (ans.correct_percentage/100);
+            if (!ans.correct) nextScore--
+        });
+        return prevScore - nextScore;
+      });
+      if (wordlist.userId === id) {
+        res.status(200).json({ success: true, msg: "Here is your wordlist!", wordlist });
+      } else {
+        res.status(401).json({ success: false, msg: "This wordlist does not belong to this user!" });
+      };
+    };
   },
 );
 
