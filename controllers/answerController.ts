@@ -28,8 +28,8 @@ export const checkAnswer = async (req, res, next) => {
             }
         });
         const testAnswerList = user.testAnswers.map(ans => {return {id: ans.id, created: ans.created}}).sort((a,b) => {return a.created.getTime()-b.created.getTime()});
-        if (testAnswerList.length>500) {
-            const toDelete = testAnswerList.slice(0,testAnswerList.length-500).map(obj => {return obj.id})
+        if (testAnswerList.length>1000) {
+            const toDelete = testAnswerList.slice(0,testAnswerList.length-1000).map(obj => {return obj.id})
             await prisma.test_answer.deleteMany({
                 where: {
                     id: {in: toDelete}
