@@ -995,19 +995,20 @@ router.get("/study",
           if (cur.correct_percentage<100) return acc-((100-cur.correct_percentage)/100);
           return acc+cur.correct_percentage/100;
         }, 0);
-        console.log(score)
         if (score>0.99) return false;
         return true;
       }).sort((prev, next) => {
         let prevScore = 0;
         let nextScore = 0;
         prev.test_answers.forEach(ans => {
-            prevScore = prevScore + (ans.correct_percentage/100);
-            if (!ans.correct) prevScore--
+          if (ans.correct) {
+            prevScore++;
+          } else prevScore = prevScore - ((100-ans.correct_percentage)/100);  
         });
         next.test_answers.forEach(ans => {
-            nextScore = nextScore + (ans.correct_percentage/100);
-            if (!ans.correct) nextScore--
+          if (ans.correct) {
+            nextScore++;
+          } else nextScore = nextScore - ((100-ans.correct_percentage)/100); 
         });
         return prevScore - nextScore;
       });
