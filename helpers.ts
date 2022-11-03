@@ -46,30 +46,36 @@ export const compare = (str1, str2, langs, strict) => {
     let wordType = "unknown";
     switch (langs[langs.selectedLang]) {
         case "greek" :
-            if (splitAnswer.length===3) {
-                if (defarticles.includes(splitAnswer[2])) {
-                    wordType = "noun";
-                } else {
-                    wordType = "adj";
+            if (langs.lang1==="greek") {
+                if (splitTest.length===1 && splitAnswer.includes(splitTest[0])) {
+                    answer = splitTest[0];
                 };
-            };
-            if (splitAnswer.length===2) wordType = "adj";
-            if (splitTest.length!==splitAnswer.length) {
-                switch (wordType) {
-                    case "noun":
-                        if (splitTest.length===1) answer = splitAnswer[0];
-                        break;
-                    case "adj":
-                        if (splitTest.length===1) answer = splitAnswer[0];
-                        console.log("answer",answer)
-                        break;
-                    case "verb":
-                        break;
-                    default: 
-                        if (splitTest.length===1) answer = splitAnswer[0];    
-                        break;
+            } else {
+                if (splitAnswer.length===3) {
+                    if (defarticles.includes(splitAnswer[2])) {
+                        wordType = "noun";
+                    } else {
+                        wordType = "adj";
+                    };
                 };
-            };
+                if (splitAnswer.length===2) wordType = "adj";
+                if (splitTest.length!==splitAnswer.length) {
+                    switch (wordType) {
+                        case "noun":
+                            if (splitTest.length===1) answer = splitAnswer[0];
+                            break;
+                        case "adj":
+                            if (splitTest.length===1) answer = splitAnswer[0];
+                            console.log("answer",answer)
+                            break;
+                        case "verb":
+                            break;
+                        default: 
+                            if (splitTest.length===1) answer = splitAnswer[0];    
+                            break;
+                    };
+                };
+            };            
             break;
         case "english":
             const answers = [...splitAnswer];
@@ -97,35 +103,41 @@ export const compare = (str1, str2, langs, strict) => {
             };
             break;
         case "latin":
-            if (splitAnswer.length===3) {
-                if (["m.", "f.", "n.", "m", "f", "n"].includes(splitAnswer[3])) {
-                    wordType = "noun";
-                } else {
-                    const ends = splitAnswer.map(val => {return val.slice(val.length-1)}).join("");
-                    if (ends === "rim" || ends === "ris") {
-                        wordType = "verb";
-                    } else wordType = "adj";
+            if (langs.lang1==="latin") {
+                if (splitTest.length===1 && splitAnswer.includes(splitTest[0])) {
+                    answer = splitTest[0];
                 };
-            };
-            if (splitAnswer.length===2) wordType = "adj";
-            if (splitAnswer.length===4) {
-                const ends = splitAnswer.map(val => {return val.slice(val.length-1)}).join("");
-                if (ends === "oeim") wordType = "verb";
-            };
-            if (splitTest.length!==splitAnswer.length) {
-                switch (wordType) {
-                    case "noun":
-                        if (splitTest.length===1) answer = splitAnswer[0];
-                        break;
-                    case "adj":
-                        if (splitTest.length===1) answer = splitAnswer[0];
-                        break;
-                    case "verb":
-                        if (splitTest.length===1) answer = splitAnswer[0];
-                        break;
-                    default: 
-                        if (splitTest.length===1) answer = splitAnswer[0];
-                        break;
+            } else {
+                if (splitAnswer.length===3) {
+                    if (["m.", "f.", "n.", "m", "f", "n"].includes(splitAnswer[3])) {
+                        wordType = "noun";
+                    } else {
+                        const ends = splitAnswer.map(val => {return val.slice(val.length-1)}).join("");
+                        if (ends === "rim" || ends === "ris") {
+                            wordType = "verb";
+                        } else wordType = "adj";
+                    };
+                };
+                if (splitAnswer.length===2) wordType = "adj";
+                if (splitAnswer.length===4) {
+                    const ends = splitAnswer.map(val => {return val.slice(val.length-1)}).join("");
+                    if (ends === "oeim") wordType = "verb";
+                };
+                if (splitTest.length!==splitAnswer.length) {
+                    switch (wordType) {
+                        case "noun":
+                            if (splitTest.length===1) answer = splitAnswer[0];
+                            break;
+                        case "adj":
+                            if (splitTest.length===1) answer = splitAnswer[0];
+                            break;
+                        case "verb":
+                            if (splitTest.length===1) answer = splitAnswer[0];
+                            break;
+                        default: 
+                            if (splitTest.length===1) answer = splitAnswer[0];
+                            break;
+                    };
                 };
             };
             break;
