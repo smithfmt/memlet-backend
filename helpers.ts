@@ -46,6 +46,7 @@ export const compare = (str1, str2, langs, strict) => {
     let wordType = "unknown";
     switch (langs[langs.selectedLang]) {
         case "greek" :
+            // Prose Comp
             if (langs.lang1==="greek") {
                 if (splitTest.length===1 && splitAnswer.includes(splitTest[0])) {
                     answer = splitTest[0];
@@ -103,6 +104,7 @@ export const compare = (str1, str2, langs, strict) => {
             };
             break;
         case "latin":
+            // Prose comp
             if (langs.lang1==="latin") {
                 if (splitTest.length===1 && splitAnswer.includes(splitTest[0])) {
                     answer = splitTest[0];
