@@ -33,6 +33,7 @@
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "path": "^0.12.7",
+    "postgres": "^3.3.2",
     "prisma": "^4.2.1",
     "source-map-loader": "^4.0.0",
     "tslint": "^6.1.3",

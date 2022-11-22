@@ -71,6 +71,6 @@ model Folder {
   wordlists Wordlist[]
   userId    Int
   user      User       @relation(fields: [userId], references: [id])
-  private   Boolean    @default(true)
-  created   DateTime    @default(now())
+  // private   Boolean    @default(true)
+  // created   DateTime   @default(now())
 }
