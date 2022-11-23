@@ -86,6 +86,7 @@ router.post("/create",
         item.word = item.word.trim();
         return item;
       });
+      console.log(newWords)
       await prisma.wordlist_item.createMany({
         data: [
           ...newWords
@@ -365,11 +366,40 @@ router.get("/all-stats",
     });
     let answers = [];
     wordlistItems.forEach(item => answers = [...answers, ...item.test_answers]);
+    console.log(answers)
     const sortedListItems = wordlistItems.sort((a,b) => {
       const reducer = (acc, cur) => {acc + (cur.correct ? 1 : -1); }
       return b.test_answers.reduce(reducer, 0) - a.test_answers.reduce(reducer, 0);
     });
-res.status(200).json({ success: true, msg: "Here is your wordlist!", wordlistItems: sortedListItems, answers });
+  res.status(200).json({ success: true, msg: "Here is your stats!", wordlistItems: sortedListItems, answers });
+  },
+);
+router.get("/graph-all-stats",
+  passport.authenticate("jwt", {session: false}),
+  async (req, res, next) => {
+    const id = jwt.decode(req.headers.authorization.split(" ")[1]).sub as string;
+    const wordlists = await prisma.wordlist.findMany({
+      where: {
+        userId: parseInt(id),
+      },
+    });
+    const wordlistIds = wordlists.map(list => {return list.id});
+    let wordlistItems = await prisma.wordlist_item.findMany({
+      where: {
+        wordlistId: { in: wordlistIds },
+      },
+      include: {
+        test_answers: true,
+      },
+    });
+    let answers = [];
+    wordlistItems.forEach(item => answers = [...answers, ...item.test_answers]);
+    const sortedListItems = wordlistItems.sort((a,b) => {
+      const reducer = (acc, cur) => {acc + (cur.correct ? 1 : -1); }
+      return b.test_answers.reduce(reducer, 0) - a.test_answers.reduce(reducer, 0);
+    });
+    answers = answers.length>400?answers.slice(answers.length-400,answers.length):answers;
+  res.status(200).json({ success: true, msg: "Here is your stats!", wordlistItems: sortedListItems, answers });
   },
 );
 
