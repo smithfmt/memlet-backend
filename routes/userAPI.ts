@@ -197,6 +197,24 @@ router.put("/edit",
   },
 );
 
+router.put("/learnt",
+  passport.authenticate("jwt", {session: false}),
+  async (req, res, next) => {
+    const jwtId = jwt.decode(req.headers.authorization.split(" ")[1]).sub;
+    const { id, userId, learnt } = req.body;
+    if (jwtId!==userId) return res.status(401).json({ success: false, msg: "auth error" });
+    await prisma.wordlist_item.update({
+      where: {
+        id: parseInt(id),
+      },
+      data: {
+        learnt,
+      },
+    });
+    res.status(200).json({ success: true, msg: "Successfully Updated your wordlist item!" });
+  },
+);
+
 router.delete("/edit",
   passport.authenticate("jwt", {session: false}),
   async (req, res, next) => {
@@ -255,9 +273,10 @@ router.get("/play",
       wordlists.forEach(listObj => {
         folderList.words = [...folderList.words, ...listObj.words];
         folderList.length = folderList.length + listObj.words.length;
-        folderList.langs = listObj.langs
-        folderList.title = folder.name
+        folderList.langs = listObj.langs;
+        folderList.title = folder.name;
       });
+      folderList.words = folderList.words.filter(word => {return !word.learnt});
       if (parseInt(id) === folder.userId) {
         res.status(200).json({ success: true, msg: "Here is your folderList!", wordlist: folderList });
       } else {
@@ -272,6 +291,7 @@ router.get("/play",
           words: true,
         },
       });
+      wordlist.words = wordlist.words.filter(word => {return !word.learnt});
       if (parseInt(id) === wordlist.userId) {
         res.status(200).json({ success: true, msg: "Here is your wordlist!", wordlist });
       } else {
@@ -451,6 +471,7 @@ router.get("/dynamic",
         });
         return prevScore - nextScore;
       });
+      folderList.words = folderList.words.filter(word => {return !word.learnt});
       if (parseInt(id) === folder.userId) {
         res.status(200).json({ success: true, msg: "Here is your folderList!", wordlist: folderList });
       } else {
@@ -483,6 +504,7 @@ router.get("/dynamic",
           });
           return prevScore - nextScore;
       });
+      wordlist.words = wordlist.words.filter(word => {return !word.learnt});
       if (wordlist.userId === id) {
         res.status(200).json({ success: true, msg: "Here is your wordlist!", wordlist });
       } else {
@@ -1021,6 +1043,7 @@ router.get("/study",
         },
       });
       folderList.words = wordlistItems.filter((item) => {
+        if (item.learnt) return false;
         const score = item.test_answers.reduce((acc, cur) => {
           if (cur.correct_percentage<100) return acc-((100-cur.correct_percentage)/100);
           return acc+cur.correct_percentage/100;
@@ -1063,6 +1086,7 @@ router.get("/study",
         },
       }) as any;
       wordlist.words = wordlistItems.filter((item) => {
+        if (item.learnt) return false;
         const score = item.test_answers.reduce((acc, cur) => {
           if (cur.correct_percentage<100) return acc-((100-cur.correct_percentage)/100);
           return acc+cur.correct_percentage/100;
@@ -1090,5 +1114,6 @@ router.get("/study",
     };
   },
 );
+
 
 export default router;

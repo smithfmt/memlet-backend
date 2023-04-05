@@ -1,4 +1,5 @@
 // npx prisma migrate dev --name init
+// npx prisma db push
 
 datasource db {
   provider = "postgresql"
@@ -44,6 +45,7 @@ model Wordlist_item {
   word         String
   translation  String
   langs        String        @default("latin-english")
+  learnt       Boolean       @default(false)
   wordlistId   Int
   wordlist     Wordlist      @relation(fields: [wordlistId], references: [id])
   test_answers Test_answer[] @relation("Results")
