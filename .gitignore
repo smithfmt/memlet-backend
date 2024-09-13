@@ -4,3 +4,5 @@ crypto
 *.pem
 
 build
+
+.git.bfg-report
